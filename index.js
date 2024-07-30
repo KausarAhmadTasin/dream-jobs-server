@@ -1,6 +1,6 @@
 const express = require("express");
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
 const app = express();
@@ -32,6 +32,27 @@ async function run() {
     app.get("/jobs", async (req, res) => {
       const cursor = jobCollection.find();
       const result = await cursor.toArray();
+
+      res.send(result);
+    });
+
+    app.get("/home", async (req, res) => {
+      const cursor = jobCollection.find().limit(8);
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
+
+    app.post("/jobs", async (req, res) => {
+      const job = req.body;
+      const result = await jobCollection.insertOne(job);
+      res.send(result);
+    });
+
+    app.get("/jobs/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await jobCollection.findOne(query);
 
       res.send(result);
     });
