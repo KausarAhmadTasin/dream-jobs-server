@@ -65,6 +65,21 @@ async function run() {
       res.send(result);
     });
 
+    app.patch("/jobs/:id/apply", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const operations = { upsert: true };
+      const updateApplicanstNumber = { $inc: { applicants: 1 } };
+
+      const result = await jobCollection.updateOne(
+        filter,
+        updateApplicanstNumber,
+        operations
+      );
+
+      res.send(result);
+    });
+
     app.get("/logos", async (req, res) => {
       const query = {};
       const options = { projection: { photoUrl: 1, _id: 1, company: 1 } };
