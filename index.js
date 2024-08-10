@@ -23,37 +23,55 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    // Connect the client to the server	(optional starting in v4.7)
+    // Connect the client to the server (optional starting in v4.7)
     await client.connect();
 
     // Get the database and collection on which to run the operation
     const jobCollection = client.db("dreamJobs").collection("jobCollection");
 
     app.get("/jobs", async (req, res) => {
-      const cursor = jobCollection.find();
-      const result = await cursor.toArray();
+      let query = {};
+      if (req.query?.type) {
+        query = { job_type: req.query.type };
+      }
 
-      res.send(result);
-    });
+      const page = parseInt(req.query?.page) || 0;
+      const size = parseInt(req.query?.size) || 15;
 
-    app.get("/home", async (req, res) => {
-      const cursor = jobCollection.find().limit(8);
-      const result = await cursor.toArray();
-
+      const cursor = jobCollection.find(query);
+      const result = await cursor
+        .skip(page * size)
+        .limit(size)
+        .toArray();
       res.send(result);
     });
 
     app.post("/jobs", async (req, res) => {
       const job = req.body;
+
       const result = await jobCollection.insertOne(job);
       res.send(result);
+    });
+
+    app.get("/jobsCount", async (req, res) => {
+      const count = await jobCollection.estimatedDocumentCount();
+      res.send({ count });
     });
 
     app.get("/jobs/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobCollection.findOne(query);
+      res.send(result);
+    });
 
+    app.get("/logos", async (req, res) => {
+      const query = {};
+      const options = { projection: { photoUrl: 1, _id: 1, company: 1 } };
+      const result = await jobCollection
+        .find(query, options)
+        .limit(20)
+        .toArray();
       res.send(result);
     });
 
