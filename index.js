@@ -31,6 +31,11 @@ async function run() {
 
     app.get("/jobs", async (req, res) => {
       let query = {};
+
+      if (req.query?.email) {
+        query = { employer_email: req.query.email };
+      }
+
       if (req.query?.type) {
         query = { job_type: req.query.type };
       }
@@ -46,6 +51,17 @@ async function run() {
       res.send(result);
     });
 
+    app.get("/jobs", async (req, res) => {
+      let query = {};
+
+      if (req.query?.email) {
+        query = { employer_email: req.query.email };
+      }
+      const cursor = jobCollection.find(query);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+
     app.post("/jobs", async (req, res) => {
       const job = req.body;
 
@@ -54,7 +70,13 @@ async function run() {
     });
 
     app.get("/jobsCount", async (req, res) => {
-      const count = await jobCollection.estimatedDocumentCount();
+      let query = {};
+
+      if (req.query?.email) {
+        query = { employer_email: req.query.email };
+      }
+
+      const count = await jobCollection.countDocuments(query);
       res.send({ count });
     });
 
