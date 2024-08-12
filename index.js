@@ -102,6 +102,14 @@ async function run() {
       res.send(result);
     });
 
+    app.delete("/jobs/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await jobCollection.deleteOne(query);
+
+      res.send(result);
+    });
+
     app.get("/logos", async (req, res) => {
       const query = {};
       const options = { projection: { photoUrl: 1, _id: 1, company: 1 } };
