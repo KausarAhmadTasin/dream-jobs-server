@@ -102,11 +102,46 @@ async function run() {
       res.send(result);
     });
 
-    app.delete("/jobs/:id", async (req, res) => {
+    app.delete("/myJobs/:id", async (req, res) => {
       const id = req.params.id;
       const query = { _id: new ObjectId(id) };
       const result = await jobCollection.deleteOne(query);
 
+      res.send(result);
+    });
+
+    app.put("/myJobs/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const edittedJob = req.body;
+
+      const editJob = {
+        $set: {
+          bonus: edittedJob.bonus,
+          company: edittedJob.company,
+          photoUrl: edittedJob.photoUrl,
+          deadline: edittedJob.deadline,
+          deadline_start: edittedJob.deadline_start,
+          employer: edittedJob.employer,
+          employer_email: edittedJob.employer_email,
+          increment: edittedJob.increment,
+          job_posting_date: edittedJob.job_posting_date,
+          job_title: edittedJob.job_title,
+          job_type: edittedJob.job_type,
+          location: edittedJob.location,
+          other_benefits: edittedJob.other_benefits,
+          probation_period: edittedJob.probation_period,
+          requirements: edittedJob.requirements,
+          responsibilities: edittedJob.responsibilities,
+          salary_max: edittedJob.salary_max,
+          salary_min: edittedJob.salary_min,
+          vacancy: edittedJob.vacancy,
+          weekends: edittedJob.weekends,
+          applicants: edittedJob.applicants,
+        },
+      };
+
+      const result = await jobCollection.updateOne(filter, editJob);
       res.send(result);
     });
 
