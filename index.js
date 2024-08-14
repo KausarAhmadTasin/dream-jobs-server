@@ -28,6 +28,9 @@ async function run() {
 
     // Get the database and collection on which to run the operation
     const jobCollection = client.db("dreamJobs").collection("jobCollection");
+    const applicantsCollection = client
+      .db("dreamJobs")
+      .collection("applicantsCollection");
 
     app.get("/jobs", async (req, res) => {
       let query = {};
@@ -51,16 +54,16 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/jobs", async (req, res) => {
-      let query = {};
+    // app.get("/jobs", async (req, res) => {
+    //   let query = {};
 
-      if (req.query?.email) {
-        query = { employer_email: req.query.email };
-      }
-      const cursor = jobCollection.find(query);
-      const result = await cursor.toArray();
-      res.send(result);
-    });
+    //   if (req.query?.email) {
+    //     query = { employer_email: req.query.email };
+    //   }
+    //   const cursor = jobCollection.find(query);
+    //   const result = await cursor.toArray();
+    //   res.send(result);
+    // });
 
     app.post("/jobs", async (req, res) => {
       const job = req.body;
@@ -152,6 +155,35 @@ async function run() {
         .find(query, options)
         .limit(20)
         .toArray();
+      res.send(result);
+    });
+
+    app.get("/application", async (req, res) => {
+      let query = {};
+
+      if (req.query?.applicant_email) {
+        query = { applicant_email: req.query.applicant_email };
+      }
+      if (req.query?.employer_email) {
+        query = { employer_email: req.query.employer_email };
+      }
+
+      const result = await applicantsCollection.find(query).toArray();
+      res.send(result);
+    });
+
+    app.post("/application", async (req, res) => {
+      const application = req.body;
+
+      const result = await applicantsCollection.insertOne(application);
+      res.send(result);
+    });
+
+    app.delete("/application/:id", async (req, res) => {
+      const id = req.params.id;
+      const query = { _id: new ObjectId(id) };
+      const result = await applicantsCollection.deleteOne(query);
+
       res.send(result);
     });
 
