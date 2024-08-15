@@ -43,6 +43,10 @@ async function run() {
         query = { job_type: req.query.type };
       }
 
+      if (req.query?.title) {
+        query.job_title = { $regex: req.query.title, $options: "i" };
+      }
+
       const page = parseInt(req.query?.page) || 0;
       const size = parseInt(req.query?.size) || 15;
 
@@ -53,17 +57,6 @@ async function run() {
         .toArray();
       res.send(result);
     });
-
-    // app.get("/jobs", async (req, res) => {
-    //   let query = {};
-
-    //   if (req.query?.email) {
-    //     query = { employer_email: req.query.email };
-    //   }
-    //   const cursor = jobCollection.find(query);
-    //   const result = await cursor.toArray();
-    //   res.send(result);
-    // });
 
     app.post("/jobs", async (req, res) => {
       const job = req.body;
