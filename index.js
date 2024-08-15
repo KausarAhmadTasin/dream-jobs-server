@@ -1,5 +1,7 @@
 const express = require("express");
 const cors = require("cors");
+const jwt = require("jsonwebtoken");
+const cookieParser = require("cookie-parser");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 require("dotenv").config();
 
@@ -7,8 +9,33 @@ const app = express();
 const port = process.env.PORT || 5000;
 
 // Middleware
-app.use(cors());
+app.use(
+  cors({
+    origin: ["http://localhost:5173"],
+    credentials: true,
+  })
+);
 app.use(express.json());
+app.use(cookieParser());
+
+const logger = (req, res, next) => {
+  next();
+};
+
+const varifyToken = (req, res, next) => {
+  const token = req?.cookies?.token;
+  if (!token) {
+    return res.status(401).send({ messege: "Unauthorized access" });
+  }
+
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (err, decoded) => {
+    if (err) {
+      return res.status(401).send({ messege: "Unauthorized access" });
+    }
+    req.user = decoded;
+    next();
+  });
+};
 
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASSWORD}@cluster0.dqs9o84.mongodb.net/?appName=Cluster0`;
 
@@ -31,6 +58,29 @@ async function run() {
     const applicantsCollection = client
       .db("dreamJobs")
       .collection("applicantsCollection");
+
+    // Auth related apis
+    app.post("/jwt", async (req, res) => {
+      const user = req.body;
+      const token = jwt.sign(user, process.env.ACCESS_TOKEN_SECRET, {
+        expiresIn: "1h",
+      });
+      res
+        .cookie("token", token, {
+          httpOnly: true,
+          secure: true,
+          sameSite: "none",
+        })
+        .send({ success: true });
+    });
+
+    app.post("/logout", async (req, res) => {
+      const user = req.body;
+
+      res.clearCookie("token", { maxAge: 0 }).send({ success: true });
+    });
+
+    // Services related apis
 
     app.get("/jobs", async (req, res) => {
       let query = {};
@@ -151,7 +201,7 @@ async function run() {
       res.send(result);
     });
 
-    app.get("/application", async (req, res) => {
+    app.get("/application", logger, varifyToken, async (req, res) => {
       let query = {};
 
       if (req.query?.applicant_email) {
@@ -159,6 +209,14 @@ async function run() {
       }
       if (req.query?.employer_email) {
         query = { employer_email: req.query.employer_email };
+      }
+
+      console.log("token owner", req.user);
+      if (
+        req?.user.email !== req.query?.applicant_email &&
+        req?.user.email !== req.query?.employer_email
+      ) {
+        return res.status(403).send({ messege: "Forbiden access" });
       }
 
       const result = await applicantsCollection.find(query).toArray();
