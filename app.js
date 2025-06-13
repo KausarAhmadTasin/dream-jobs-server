@@ -1,10 +1,9 @@
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-require("dotenv").config();
+const routes = require("./routes");
 
 const app = express();
-const port = process.env.PORT || 3000;
 
 // Middleware
 app.use(
@@ -21,18 +20,11 @@ app.use(express.json());
 app.use(cookieParser());
 
 // Routes
-const authRoutes = require("./routes/authRoutes");
-const jobRoutes = require("./routes/jobRoutes");
-const applicationRoutes = require("./routes/applicationRoutes");
+app.use("/api", routes);
 
-app.use("/auth", authRoutes);
-app.use("/jobs", jobRoutes);
-app.use("/application", applicationRoutes);
-
+// Test route
 app.get("/", (req, res) => {
   res.send("Dream Jobs server is running");
 });
 
-app.listen(port, () => {
-  console.log(`Dream Jobs server is running at port ${port}`);
-});
+module.exports = app;
